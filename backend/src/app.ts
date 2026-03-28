@@ -10,6 +10,11 @@ import { errorMiddleware } from './middleware/error.middleware.js';
 import { notFoundMiddleware } from './middleware/notFound.middleware.js';
 import { createApiRouter } from './routes/index.js';
 
+/** Browsers send `Origin` without a trailing slash; env URLs often include one — mismatch breaks CORS. */
+function normalizeCorsOrigin(url: string): string {
+  return url.trim().replace(/\/+$/, '');
+}
+
 export function createApp(
   env: Env,
   logger: pino.Logger,
@@ -33,7 +38,7 @@ export function createApp(
   const corsOrigins = [
     env.FRONTEND_URL,
     ...(env.CORS_EXTRA?.split(',').map((s) => s.trim()).filter(Boolean) ?? []),
-  ];
+  ].map(normalizeCorsOrigin);
 
   app.use(
     cors({
